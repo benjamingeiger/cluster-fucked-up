@@ -1,0 +1,72 @@
+%
+%
+% Copyright (c) 2012 Benjamin Geiger <copyright@bgeiger.net>
+\documentclass{article}
+%\usepackage{indentfirst}
+\usepackage{hyperref}
+
+%\usepackage[pdftex]{graphicx}
+%\DeclareGraphicsExtensions{.pdf,.jpg,.png}
+
+\title{Project Proposal}
+\author{Benjamin Geiger\\
+Andrew Price}
+\date{6 March 2013}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+As social media sites become more popular, these websites have a vested
+interest in determining which sections their users visit, as well as
+target advertising. One such site is ``Reddit'', a user-driven
+communication board and news aggregator. Reddit accepts news submissions
+from users and collects them into separate communities, known as
+``subreddits''. Users then decide which subreddits they wish to see when
+reading the site.
+
+For this project, we plan on mining data from a large social media site,
+and attempting to both profile individual users and determine which
+sections of the website they would be interested in. The commercial
+applications of such a project should be obvious.
+
+\section{Deliverables}
+
+The planned deliverables at this point include a report on our findings,
+as well as detailed data. This report will include discussions on our
+findings, as well as a high-level outline of code.
+
+\section{Methodology}
+
+Reddit publishes a data access API for use by application developers. We
+intend to use this API to acquire information about the site's users and
+subreddits. We can then determine the users' interests, with which we
+can then suggest subreddits they may be interested in, as well as
+advertisers.
+
+\section{Resources}
+
+We initially intend to work with the Python language, using the PRAW
+(Python Reddit API
+Wrapper)\footnote{\url{https://praw.readthedocs.org/en/latest/}} or
+ReddiWrap\footnote{\url{https://github.com/derv82/reddiwrap/}}
+libraries.
+
+\section{Schedule}
+
+Our first milestone is to get a better understanding the required
+libraries as well as clustering algorithms. The second milestone will be
+to find all subreddits visited by any user of a given subreddit.
+Currently, this is the extent of the analysis conducted on reddit users.
+Finally, we plan on writing the prediction algorithm for the data we
+collect.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{proposal}
+
+\end{document}
+
+
