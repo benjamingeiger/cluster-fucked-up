@@ -33,3 +33,37 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# Other version control
+.hg
+.bzr
+.svn
+
+# Vim turds.
+*.swp
+
+# LaTeX turds.
+*.aux
+*.glo
+*.idx
+*.log
+*.toc
+*.ist
+*.acn
+*.acr
+*.alg
+*.bbl
+*.blg
+*.dvi
+*.glg
+*.gls
+*.ilg
+*.ind
+*.lof
+*.lot
+*.maf
+*.mtc
+*.mtc1
+*.out
+*.pdf
+*.synctex.gz
