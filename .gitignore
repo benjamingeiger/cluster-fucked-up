@@ -1,3 +1,7 @@
+# Project-specific
+reddit.db
+
+
 *.py[cod]
 
 # C extensions
