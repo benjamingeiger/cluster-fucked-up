@@ -1,31 +1,31 @@
 
 
 CREATE TABLE subreddits (
-	name		VARCHAR(50)	PRIMARY KEY
+	name		TEXT	PRIMARY KEY
 );
 
 CREATE TABLE users (
-	name		VARCHAR(50)	PRIMARY KEY
+	name		TEXT	PRIMARY KEY
 );
 
 CREATE TABLE submissions (
-	submission_id	VARCHAR(10)	PRIMARY KEY,
-	user_name	VARCHAR(50)	NOT NULL,
-	subreddit_name	VARCHAR(50)	NOT NULL,
+	submission_id	TEXT	PRIMARY KEY,
+	user_name	TEXT	NOT NULL,
+	subreddit_name	TEXT	NOT NULL,
 
-	title		VARCHAR(255),
+	title		TEXT,
 	karma		INTEGER,
 
-	link		VARCHAR(255),
+	link		TEXT,
 
 	FOREIGN KEY (user_name) REFERENCES users(name),
 	FOREIGN KEY (subreddit_name) REFERENCES subreddits(name)
 );
 
 CREATE TABLE comments (
-	comment_id	VARCHAR(10)	PRIMARY KEY,
-	user_name	VARCHAR(50)	NOT NULL,
-	submission_id	VARCHAR(10),
+	comment_id	TEXT	PRIMARY KEY,
+	user_name	TEXT	NOT NULL,
+	submission_id	TEXT,
 
 	karma		INTEGER,
 
