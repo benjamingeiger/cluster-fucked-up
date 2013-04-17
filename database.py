@@ -44,7 +44,7 @@ def process_subreddit(subreddit_name,
         reddit_obj = praw.Reddit(USER_AGENT)
 
     submission_gen = reddit.get_hot_from_subreddit(subreddit_name,
-                                                   reddit=reddit_obj,
+                                                   reddit_obj=reddit_obj,
                                                    limit=limit)
 
     users = []
