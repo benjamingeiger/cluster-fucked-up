@@ -29,3 +29,13 @@ def get_hot_from_subreddit(subreddit_name,
             print(count)
 
     return hot
+
+
+def get_all_comments_from_submission(submission,
+                                     limit=1000,
+                                     print_updates=True):
+    """Retrieve all comments from the given submission."""
+
+    submission.replace_more_comments(limit=None, threshold=0)
+
+    return submission.comments
