@@ -9,14 +9,14 @@ from definitions import USER_AGENT
 
 def get_hot_from_subreddit(subreddit_name,
                            limit=1000,
-                           reddit=None,
+                           reddit_obj=None,
                            print_updates=True):
     """Retrieve the hot submissions from the given subreddit."""
 
-    if reddit is None:
-        reddit = praw.Reddit(USER_AGENT)
+    if reddit_obj is None:
+        reddit_obj = praw.Reddit(USER_AGENT)
 
-    subreddit = reddit.get_subreddit(subreddit_name)
+    subreddit = reddit_obj.get_subreddit(subreddit_name)
 
     hot_gen = subreddit.get_hot(limit=limit)
 
