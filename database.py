@@ -68,6 +68,10 @@ def process_subreddit(subreddit_name,
                             title, karma, link))
 
         for c in reddit.get_all_comments_from_submission(s, limit=limit):
+            if c.author is None:
+                # Deleted comment.
+                continue
+
             comment_id = c.name
             user_name = c.author.name
             karma = c.score
