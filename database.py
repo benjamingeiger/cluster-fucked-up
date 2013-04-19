@@ -8,7 +8,7 @@ from datetime import datetime
 
 from collections import Counter
 
-#from utilities import debug
+from utilities import debug_silence as debug
 
 import reddit
 
