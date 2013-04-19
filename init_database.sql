@@ -1,12 +1,12 @@
-
-
 CREATE TABLE subreddits (
 	name		TEXT	PRIMARY KEY,
+	refs		INTEGER	DEFAULT 0,
 	last_processed	INTEGER
 );
 
 CREATE TABLE redditors (
 	name		TEXT	PRIMARY KEY,
+	refs		INTEGER	DEFAULT 0,
 	last_processed	INTEGER
 );
 
