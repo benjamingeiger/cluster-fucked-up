@@ -39,3 +39,28 @@ def get_all_comments_from_submission(submission,
     submission.replace_more_comments(limit=None, threshold=0)
 
     return submission.comments
+
+def get_submissions_from_redditor(redditor_name,
+                                  limit=1000,
+                                  reddit_obj=None,
+                                  print_updates=True):
+    """Retrieve the most recent submissions from the given redditor."""
+
+    if reddit_obj is None:
+        reddit_obj = praw.Reddit(USER_AGENT)
+
+    redditor = reddit_obj.get_redditor(redditor_name)
+
+    submissions_gen = redditor.get_submitted(limit=limit)
+
+    count = 0
+    submissions = []
+
+    for submission in submissions_gen:
+        submissions.append(submission)
+        count += 1
+        if print_updates and count % 100 == 0:
+            print(count)
+
+    return submissions
+
