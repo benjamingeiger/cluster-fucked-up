@@ -24,6 +24,13 @@ INSERT OR REPLACE INTO redditors
 VALUES (?, ?, ?);
 """
 
+update_redditor_refs_sql = \
+"""
+UPDATE redditors
+SET refs = ?
+WHERE name = ?;
+"""
+
 insert_subreddit_sql = \
 """
 INSERT OR REPLACE INTO subreddits
@@ -55,11 +62,8 @@ def get_refs_for_redditors(redditor_names, conn):
             """
             SELECT name, refs
             FROM redditors
-            WHERE last_processed IS NULL OR last_processed < 0
-            AND name IN ({});
+            WHERE name IN ({});
             """.format(",".join(["?"] * num_redditors))
-
-    print(get_redditors_sql)
 
     cur = conn.execute(get_redditors_sql, redditor_names)
 
@@ -114,14 +118,22 @@ def process_subreddit(subreddit_name,
     conn = sqlite3.connect(database_name)
 
     refs = get_refs_for_redditors(redditors.keys(), conn)
-    redditors = Counter(redditors) + Counter(refs)
+    new_redditors = {x: redditors[x]
+                     for x in redditors
+                     if x not in refs}
+    old_redditors = {x: redditors[x]
+                     for x in redditors
+                     if x in refs}
+    old_redditors = Counter(old_redditors) + Counter(refs)
 
     timestamp = timegm(datetime.utcnow().utctimetuple())
-    redditors = [(u, redditors[u], None) for u in redditors.keys()]
+    old_redditors = [(u, old_redditors[u], None) for u in old_redditors.keys()]
+    new_redditors = [(u, new_redditors[u]) for u in new_redditors.keys()]
 
     cur = conn.cursor()
 
-    cur.executemany(insert_redditor_sql, redditors)
+    cur.executemany(insert_redditor_sql, old_redditors)
+    cur.executemany(update_redditor_refs_sql, new_redditors)
     cur.executemany(insert_submission_sql, submissions)
     cur.executemany(insert_comment_sql, comments)
 
