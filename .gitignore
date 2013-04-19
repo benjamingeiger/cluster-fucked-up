@@ -1,5 +1,9 @@
 # Project-specific
+
+# Database
 reddit.db
+# Python environment
+env/
 
 
 *.py[cod]
