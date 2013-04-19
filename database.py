@@ -15,9 +15,9 @@ from definitions import USER_AGENT
 ######################################################################
 
 # SQL statements we'll need
-insert_user_sql = \
+insert_redditor_sql = \
 """
-INSERT OR REPLACE INTO users
+INSERT OR REPLACE INTO redditors
 (name, last_processed)
 VALUES (?, ?);
 """
@@ -32,7 +32,7 @@ VALUES (?, ?);
 insert_submission_sql = \
 """
 INSERT OR REPLACE INTO submissions
-(submission_id, user_name, subreddit_name,
+(submission_id, redditor_name, subreddit_name,
  title, karma, link)
 VALUES (?, ?, ?, ?, ?, ?);
 """
@@ -40,7 +40,7 @@ VALUES (?, ?, ?, ?, ?, ?);
 insert_comment_sql = \
 """
 INSERT OR REPLACE INTO comments
-(comment_id, user_name, submission_id, karma)
+(comment_id, redditor_name, submission_id, karma)
 VALUES (?, ?, ?, ?);
 """
 
@@ -59,13 +59,13 @@ def process_subreddit(subreddit_name,
                                                    reddit_obj=reddit_obj,
                                                    limit=limit)
 
-    users = []
+    redditors = []
     submissions = []
     comments = []
 
     for s in submission_gen:
         submission_id = s.name
-        user_name = s.author.name
+        redditor_name = s.author.name
         title = s.title
         karma = s.score
         if s.is_self:
@@ -73,10 +73,10 @@ def process_subreddit(subreddit_name,
         else:
             link = s.url
 
-        if user_name not in users:
-            users.append(user_name)
+        if redditor_name not in redditors:
+            redditors.append(redditor_name)
 
-        submissions.append((submission_id, user_name, subreddit_name,
+        submissions.append((submission_id, redditor_name, subreddit_name,
                             title, karma, link))
 
         for c in reddit.get_all_comments_from_submission(s, limit=limit):
@@ -85,22 +85,22 @@ def process_subreddit(subreddit_name,
                 continue
 
             comment_id = c.name
-            user_name = c.author.name
+            redditor_name = c.author.name
             karma = c.score
 
-            if user_name not in users:
-                users.append(user_name)
+            if redditor_name not in redditors:
+                redditors.append(redditor_name)
 
-            comments.append((comment_id, user_name, submission_id, karma))
+            comments.append((comment_id, redditor_name, submission_id, karma))
 
     timestamp = timegm(datetime.utcnow().utctimetuple())
-    users = [(u, None) for u in users]
+    redditors = [(u, None) for u in redditors]
 
     conn = sqlite3.connect(database_name)
     with conn:
         cur = conn.cursor()
 
-        cur.executemany(insert_user_sql, users)
+        cur.executemany(insert_redditor_sql, redditors)
         cur.executemany(insert_submission_sql, submissions)
         cur.executemany(insert_comment_sql, comments)
 
