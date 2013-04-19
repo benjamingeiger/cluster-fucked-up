@@ -6,7 +6,9 @@ import sqlite3
 from calendar import timegm
 from datetime import datetime
 
-from utilities import debug
+from collections import Counter
+
+#from utilities import debug
 
 import reddit
 
@@ -18,15 +20,15 @@ from definitions import USER_AGENT
 insert_redditor_sql = \
 """
 INSERT OR REPLACE INTO redditors
-(name, last_processed)
-VALUES (?, ?);
+(name, refs, last_processed)
+VALUES (?, ?, ?);
 """
 
 insert_subreddit_sql = \
 """
 INSERT OR REPLACE INTO subreddits
-(name, last_processed)
-VALUES (?, ?);
+(name, refs, last_processed)
+VALUES (?, ?, ?);
 """
 
 insert_submission_sql = \
@@ -47,6 +49,23 @@ VALUES (?, ?, ?, ?);
 ######################################################################
 
 
+def get_refs_for_redditors(redditor_names, conn):
+    num_redditors = len(redditor_names)
+    get_redditors_sql = \
+            """
+            SELECT name, refs
+            FROM redditors
+            WHERE last_processed IS NULL OR last_processed < 0
+            AND name IN ({});
+            """.format(",".join(["?"] * num_redditors))
+
+    print(get_redditors_sql)
+
+    cur = conn.execute(get_redditors_sql, redditor_names)
+
+    return {u[0]: u[1] for u in cur.fetchall()}
+
+
 def process_subreddit(subreddit_name,
                       database_name,
                       limit=1000,
@@ -59,7 +78,7 @@ def process_subreddit(subreddit_name,
                                                    reddit_obj=reddit_obj,
                                                    limit=limit)
 
-    redditors = []
+    redditors = {}
     submissions = []
     comments = []
 
@@ -73,8 +92,7 @@ def process_subreddit(subreddit_name,
         else:
             link = s.url
 
-        if redditor_name not in redditors:
-            redditors.append(redditor_name)
+        redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
 
         submissions.append((submission_id, redditor_name, subreddit_name,
                             title, karma, link))
@@ -88,22 +106,25 @@ def process_subreddit(subreddit_name,
             redditor_name = c.author.name
             karma = c.score
 
-            if redditor_name not in redditors:
-                redditors.append(redditor_name)
+            redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
 
             comments.append((comment_id, redditor_name, submission_id, karma))
 
-    timestamp = timegm(datetime.utcnow().utctimetuple())
-    redditors = [(u, None) for u in redditors]
-
+    # Add up the refs.
     conn = sqlite3.connect(database_name)
-    with conn:
-        cur = conn.cursor()
 
-        cur.executemany(insert_redditor_sql, redditors)
-        cur.executemany(insert_submission_sql, submissions)
-        cur.executemany(insert_comment_sql, comments)
+    refs = get_refs_for_redditors(redditors.keys(), conn)
+    redditors = Counter(redditors) + Counter(refs)
 
-        cur.executemany(insert_subreddit_sql, [(subreddit_name, timestamp)])
+    timestamp = timegm(datetime.utcnow().utctimetuple())
+    redditors = [(u, redditors[u], None) for u in redditors.keys()]
 
-        conn.commit()
+    cur = conn.cursor()
+
+    cur.executemany(insert_redditor_sql, redditors)
+    cur.executemany(insert_submission_sql, submissions)
+    cur.executemany(insert_comment_sql, comments)
+
+    cur.executemany(insert_subreddit_sql, [(subreddit_name, -1, timestamp)])
+
+    conn.commit()
