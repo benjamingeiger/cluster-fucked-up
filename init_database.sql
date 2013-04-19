@@ -1,11 +1,13 @@
 
 
 CREATE TABLE subreddits (
-	name		TEXT	PRIMARY KEY
+	name		TEXT	PRIMARY KEY,
+	last_processed	INTEGER
 );
 
 CREATE TABLE users (
-	name		TEXT	PRIMARY KEY
+	name		TEXT	PRIMARY KEY,
+	last_processed	INTEGER
 );
 
 CREATE TABLE submissions (
