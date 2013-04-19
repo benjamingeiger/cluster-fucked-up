@@ -60,6 +60,24 @@ INSERT OR REPLACE INTO comments
 VALUES (?, ?, ?, ?);
 """
 
+find_subreddit_sql = \
+"""
+SELECT name
+FROM subreddits
+WHERE last_processed IS NULL OR last_processed <= 0
+ORDER BY refs DESC
+LIMIT 1
+"""
+
+find_redditor_sql = \
+"""
+SELECT name
+FROM redditors
+WHERE last_processed IS NULL OR last_processed <= 0
+ORDER BY refs DESC
+LIMIT 1
+"""
+
 ######################################################################
 
 
@@ -249,3 +267,27 @@ def process_redditor(redditor_name,
     cur.executemany(insert_redditor_sql, [(redditor_name, -1, timestamp)])
 
     conn.commit()
+
+
+def find_next_subreddit(database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(find_subreddit_sql)
+    data = cur.fetchone()
+
+    if data is not None:
+        (data,) = data
+
+    return data
+
+
+def find_next_redditor(database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(find_redditor_sql)
+    data = cur.fetchone()
+
+    if data is not None:
+        (data,) = data
+
+    return data
