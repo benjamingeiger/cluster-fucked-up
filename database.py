@@ -3,6 +3,11 @@ from __future__ import print_function
 import praw
 import sqlite3
 
+from calendar import timegm
+from datetime import datetime
+
+from utilities import debug
+
 import reddit
 
 from definitions import USER_AGENT
@@ -13,8 +18,15 @@ from definitions import USER_AGENT
 insert_user_sql = \
 """
 INSERT OR REPLACE INTO users
-(name)
-VALUES (?);
+(name, last_processed)
+VALUES (?, ?);
+"""
+
+insert_subreddit_sql = \
+"""
+INSERT OR REPLACE INTO subreddits
+(name, last_processed)
+VALUES (?, ?);
 """
 
 insert_submission_sql = \
@@ -61,8 +73,8 @@ def process_subreddit(subreddit_name,
         else:
             link = s.url
 
-        if (user_name,) not in users:
-            users.append((user_name,))
+        if user_name not in users:
+            users.append(user_name)
 
         submissions.append((submission_id, user_name, subreddit_name,
                             title, karma, link))
@@ -76,10 +88,13 @@ def process_subreddit(subreddit_name,
             user_name = c.author.name
             karma = c.score
 
-            if (user_name,) not in users:
-                users.append((user_name,))
+            if user_name not in users:
+                users.append(user_name)
 
             comments.append((comment_id, user_name, submission_id, karma))
+
+    timestamp = timegm(datetime.utcnow().utctimetuple())
+    users = [(u, None) for u in users]
 
     conn = sqlite3.connect(database_name)
     with conn:
@@ -88,5 +103,7 @@ def process_subreddit(subreddit_name,
         cur.executemany(insert_user_sql, users)
         cur.executemany(insert_submission_sql, submissions)
         cur.executemany(insert_comment_sql, comments)
+
+        cur.executemany(insert_subreddit_sql, [(subreddit_name, timestamp)])
 
         conn.commit()
