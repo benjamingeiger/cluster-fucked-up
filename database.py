@@ -38,6 +38,13 @@ INSERT OR REPLACE INTO subreddits
 VALUES (?, ?, ?);
 """
 
+update_subreddit_refs_sql = \
+"""
+UPDATE subreddits
+SET refs = ?
+WHERE name = ?;
+"""
+
 insert_submission_sql = \
 """
 INSERT OR REPLACE INTO submissions
@@ -66,6 +73,23 @@ def get_refs_for_redditors(redditor_names, conn):
             """.format(",".join(["?"] * num_redditors))
 
     cur = conn.execute(get_redditors_sql, redditor_names)
+
+    return {u[0]: u[1] for u in cur.fetchall()}
+
+
+def get_refs_for_subreddits(subreddit_names, conn):
+    num_subreddits = len(subreddit_names)
+    get_subreddits_sql = \
+            """
+            SELECT name, refs
+            FROM subreddits
+            WHERE name IN ({});
+            """.format(",".join(["?"] * num_subreddits))
+
+    debug(get_subreddits_sql)
+    debug(subreddit_names)
+
+    cur = conn.execute(get_subreddits_sql, subreddit_names)
 
     return {u[0]: u[1] for u in cur.fetchall()}
 
@@ -138,5 +162,90 @@ def process_subreddit(subreddit_name,
     cur.executemany(insert_comment_sql, comments)
 
     cur.executemany(insert_subreddit_sql, [(subreddit_name, -1, timestamp)])
+
+    conn.commit()
+
+
+def process_redditor(redditor_name,
+                     database_name,
+                     limit=1000,
+                     reddit_obj=None):
+
+    if reddit_obj is None:
+        reddit_obj = praw.Reddit(USER_AGENT)
+
+    debug("Got reddit object")
+
+    submission_gen = reddit.get_submissions_from_redditor(
+                                redditor_name,
+                                reddit_obj=reddit_obj,
+                                limit=limit)
+    comment_gen = reddit.get_comments_from_redditor(
+                                redditor_name,
+                                reddit_obj=reddit_obj,
+                                limit=limit)
+
+    debug("Got submissions and comments")
+
+    subreddits = {}
+    submissions = []
+    comments = []
+
+    for s in submission_gen:
+        submission_id = s.name
+        subreddit_name = s.subreddit.display_name
+        title = s.title
+        karma = s.score
+        if s.is_self:
+            link = "self"
+        else:
+            link = s.url
+
+        subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 1
+
+        submissions.append((submission_id, redditor_name, subreddit_name,
+                            title, karma, link))
+
+    for c in comment_gen:
+        if c.author is None:
+            # Deleted comment.
+            continue
+
+        comment_id = c.name
+        karma = c.score
+
+        subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 1
+
+        comments.append((comment_id, redditor_name, submission_id, karma))
+
+    # Add up the refs.
+    conn = sqlite3.connect(database_name)
+
+    refs = get_refs_for_subreddits(subreddits.keys(), conn)
+    new_subreddits = {x: subreddits[x]
+                     for x in subreddits
+                     if x not in refs}
+    old_subreddits = {x: subreddits[x]
+                     for x in subreddits
+                     if x in refs}
+    old_subreddits = Counter(old_subreddits) + Counter(refs)
+
+    timestamp = timegm(datetime.utcnow().utctimetuple())
+    old_subreddits = [(u, old_subreddits[u])
+            for u in old_subreddits.keys()]
+    new_subreddits = [(u, new_subreddits[u], None)
+            for u in new_subreddits.keys()]
+
+    debug("Old:", old_subreddits)
+    debug("New:", new_subreddits)
+
+    cur = conn.cursor()
+
+    cur.executemany(insert_subreddit_sql, new_subreddits)
+    cur.executemany(update_subreddit_refs_sql, old_subreddits)
+    cur.executemany(insert_submission_sql, submissions)
+    cur.executemany(insert_comment_sql, comments)
+
+    cur.executemany(insert_redditor_sql, [(redditor_name, -1, timestamp)])
 
     conn.commit()

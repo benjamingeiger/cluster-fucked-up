@@ -7,17 +7,17 @@ import praw
 from definitions import USER_AGENT
 
 
-def unroll_submission_generator(gen, print_updates=True):
+def unroll_generator(gen, print_updates=True):
     count = 0
-    submissions = []
+    items = []
 
-    for submission in gen:
-        submissions.append(submission)
+    for item in gen:
+        items.append(item)
         count += 1
         if print_updates and count % 100 == 0:
             print(count)
 
-    return submissions
+    return items
 
 
 def get_hot_from_subreddit(subreddit_name,
@@ -66,6 +66,24 @@ def get_submissions_from_redditor(redditor_name,
     redditor = reddit_obj.get_redditor(redditor_name)
 
     submissions_gen = redditor.get_submitted(limit=limit)
-    submissions = unroll_submission_generator(submissions_gen, print_updates)
+    submissions = unroll_generator(submissions_gen,
+                                   print_updates=print_updates)
 
     return submissions
+
+
+def get_comments_from_redditor(redditor_name,
+                               limit=1000,
+                               reddit_obj=None,
+                               print_updates=True):
+    """Retrieve the most recent comments from the given redditor."""
+
+    if reddit_obj is None:
+        reddit_obj = praw.Reddit(USER_AGENT)
+
+    redditor = reddit_obj.get_redditor(redditor_name)
+
+    comments_gen = redditor.get_comments(limit=limit)
+    comments = unroll_generator(comments_gen, print_updates=print_updates)
+
+    return comments
