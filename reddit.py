@@ -7,6 +7,19 @@ import praw
 from definitions import USER_AGENT
 
 
+def unroll_submission_generator(gen, print_updates=True):
+    count = 0
+    submissions = []
+
+    for submission in gen:
+        submissions.append(submission)
+        count += 1
+        if print_updates and count % 100 == 0:
+            print(count)
+
+    return submissions
+
+
 def get_hot_from_subreddit(subreddit_name,
                            limit=1000,
                            reddit_obj=None,
@@ -40,6 +53,7 @@ def get_all_comments_from_submission(submission,
 
     return submission.comments
 
+
 def get_submissions_from_redditor(redditor_name,
                                   limit=1000,
                                   reddit_obj=None,
@@ -52,15 +66,6 @@ def get_submissions_from_redditor(redditor_name,
     redditor = reddit_obj.get_redditor(redditor_name)
 
     submissions_gen = redditor.get_submitted(limit=limit)
-
-    count = 0
-    submissions = []
-
-    for submission in submissions_gen:
-        submissions.append(submission)
-        count += 1
-        if print_updates and count % 100 == 0:
-            print(count)
+    submissions = unroll_submission_generator(submissions_gen, print_updates)
 
     return submissions
-
