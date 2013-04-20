@@ -149,7 +149,11 @@ def process_subreddit(subreddit_name,
     submissions = []
     comments = []
 
+    count = 0
+
     for s in submission_gen:
+        if (limit < 100) or (count % (limit / 10) == 0):
+            print("    -> processing submission number", count)
         submission_id = s.name
         redditor_name = s.author.name.lower()
         title = s.title
@@ -164,7 +168,7 @@ def process_subreddit(subreddit_name,
         submissions.append((submission_id, redditor_name, subreddit_name,
                             title, karma, link))
 
-        for c in reddit.get_all_comments_from_submission(s, limit=limit):
+        for c in reddit.get_all_comments_from_submission(s, limit=5):
             if c.author is None:
                 # Deleted comment.
                 continue
@@ -176,6 +180,8 @@ def process_subreddit(subreddit_name,
             redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
 
             comments.append((comment_id, redditor_name, submission_id, karma))
+
+        count += 1
 
     # Add up the refs.
     conn = sqlite3.connect(database_name)
