@@ -196,10 +196,11 @@ def process_subreddit(subreddit_name,
         else:
             link = s.url
 
-        redditors[redditor_name] = redditors.get(redditor_name, 0) + 10
+        if redditor_name != "":
+            redditors[redditor_name] = redditors.get(redditor_name, 0) + 10
 
-        submissions.append((submission_id, redditor_name, subreddit_name,
-                            title, karma, link))
+            submissions.append((submission_id, redditor_name, subreddit_name,
+                                title, karma, link))
 
         for c in reddit.get_all_comments_from_submission(s, limit=5):
             if c.author is None:
@@ -207,7 +208,10 @@ def process_subreddit(subreddit_name,
                 continue
 
             comment_id = c.name
-            redditor_name = c.author.name.lower()
+            try:
+                redditor_name = c.author.name.lower()
+            except AttributeError:
+                continue
             karma = c.score
 
             redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
