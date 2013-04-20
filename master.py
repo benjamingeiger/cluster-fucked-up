@@ -5,6 +5,7 @@ import praw
 import database
 
 from definitions import USER_AGENT
+from requests.exceptions import HTTPError
 
 
 DATABASE_NAME = "reddit.db"
@@ -42,7 +43,7 @@ def process_next_redditor(reddit_obj, count):
                 DATABASE_NAME,
                 limit=LIMIT,
                 reddit_obj=reddit_obj)
-    except requests.exceptions.HTTPError:
+    except HTTPError:
         print("Redditor's page couldn't be loaded: 404.")
         database.mark_redditor_processed(next_redditor, DATABASE_NAME)
 
