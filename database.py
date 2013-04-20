@@ -103,6 +103,18 @@ WHERE last_processed > 0;
 
 
 def get_refs_for_redditors(redditor_names, conn):
+    if len(redditor_names) <= 900:
+        return get_refs_for_redditors_helper(redditor_names, conn)
+
+    chunk = redditor_names[:900]
+    results1 = get_refs_for_redditors_helper(redditor_names[:900], conn)
+    results2 = get_refs_for_redditors(redditor_names[900:], conn)
+
+    results1.update(results2)
+    return results1
+
+
+def get_refs_for_redditors_helper(redditor_names, conn):
     num_redditors = len(redditor_names)
     get_redditors_sql = \
             """
@@ -117,6 +129,18 @@ def get_refs_for_redditors(redditor_names, conn):
 
 
 def get_refs_for_subreddits(subreddit_names, conn):
+    if len(subreddit_names) <= 900:
+        return get_refs_for_subreddits_helper(subreddit_names, conn)
+
+    chunk = subreddit_names[:900]
+    results1 = get_refs_for_subreddits_helper(subreddit_names[:900], conn)
+    results2 = get_refs_for_subreddits(subreddit_names[900:], conn)
+
+    results1.update(results2)
+    return results1
+
+
+def get_refs_for_subreddits_helper(subreddit_names, conn):
     num_subreddits = len(subreddit_names)
     get_subreddits_sql = \
             """
