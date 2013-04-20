@@ -107,6 +107,20 @@ WHERE name = ?
 AND last_processed > 0;
 """
 
+mark_redditor_processed_sql = \
+"""
+UPDATE redditors
+SET last_processed = ?
+WHERE name = ?;
+"""
+
+mark_subreddit_processed_sql = \
+"""
+UPDATE subreddits
+SET last_processed = ?
+WHERE name = ?;
+"""
+
 ######################################################################
 
 
@@ -390,3 +404,21 @@ def is_subreddit_processed(subreddit_name, database_name):
     cur = conn.execute(is_subreddit_processed_sql, (subreddit_name,))
 
     return (cur.fetchone() is not None)
+
+
+def mark_redditor_processed(redditor_name, database_name):
+    conn = sqlite3.connect(database_name)
+
+    timestamp = timegm(datetime.utcnow().utctimetuple())
+    conn.execute(mark_redditor_processed_sql,
+            (timestamp, redditor_name.lower()))
+    conn.commit()
+
+
+def mark_subreddit_processed(subreddit_name, database_name):
+    conn = sqlite3.connect(database_name)
+
+    timestamp = timegm(datetime.utcnow().utctimetuple())
+    conn.execute(mark_subreddit_processed_sql,
+            (timestamp, subreddit_name.lower()))
+    conn.commit()

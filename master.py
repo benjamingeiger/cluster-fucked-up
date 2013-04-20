@@ -36,11 +36,15 @@ def process_next_redditor(reddit_obj, count):
         print("Couldn't find next redditor.")
         return 0
     print("Processing redditor #{}: {}".format(count + 1, next_redditor))
-    database.process_redditor(
-            next_redditor,
-            DATABASE_NAME,
-            limit=LIMIT,
-            reddit_obj=reddit_obj)
+    try:
+        database.process_redditor(
+                next_redditor,
+                DATABASE_NAME,
+                limit=LIMIT,
+                reddit_obj=reddit_obj)
+    except requests.exceptions.HTTPError:
+        print("Redditor's page couldn't be loaded: 404.")
+        database.mark_redditor_processed(next_redditor, DATABASE_NAME)
 
     return 1
 
