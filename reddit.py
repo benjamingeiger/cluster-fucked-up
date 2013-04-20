@@ -7,7 +7,7 @@ import praw
 from definitions import USER_AGENT
 
 
-def unroll_generator(gen, print_updates=True):
+def unroll_generator(gen, print_updates=False):
     count = 0
     items = []
 
@@ -23,7 +23,7 @@ def unroll_generator(gen, print_updates=True):
 def get_hot_from_subreddit(subreddit_name,
                            limit=1000,
                            reddit_obj=None,
-                           print_updates=True):
+                           print_updates=False):
     """Retrieve the hot submissions from the given subreddit."""
 
     if reddit_obj is None:
@@ -46,7 +46,7 @@ def get_hot_from_subreddit(subreddit_name,
 
 def get_all_comments_from_submission(submission,
                                      limit=32,
-                                     print_updates=True):
+                                     print_updates=False):
     """Retrieve all comments from the given submission."""
 
     submission.replace_more_comments(limit=limit, threshold=1)
@@ -57,7 +57,7 @@ def get_all_comments_from_submission(submission,
 def get_submissions_from_redditor(redditor_name,
                                   limit=1000,
                                   reddit_obj=None,
-                                  print_updates=True):
+                                  print_updates=False):
     """Retrieve the most recent submissions from the given redditor."""
 
     if reddit_obj is None:
@@ -75,7 +75,7 @@ def get_submissions_from_redditor(redditor_name,
 def get_comments_from_redditor(redditor_name,
                                limit=1000,
                                reddit_obj=None,
-                               print_updates=True):
+                               print_updates=False):
     """Retrieve the most recent comments from the given redditor."""
 
     if reddit_obj is None:
