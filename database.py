@@ -130,7 +130,7 @@ def process_subreddit(subreddit_name,
 
     for s in submission_gen:
         submission_id = s.name
-        redditor_name = s.author.name
+        redditor_name = s.author.name.lower()
         title = s.title
         karma = s.score
         if s.is_self:
@@ -138,7 +138,7 @@ def process_subreddit(subreddit_name,
         else:
             link = s.url
 
-        redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
+        redditors[redditor_name] = redditors.get(redditor_name, 0) + 10
 
         submissions.append((submission_id, redditor_name, subreddit_name,
                             title, karma, link))
@@ -149,7 +149,7 @@ def process_subreddit(subreddit_name,
                 continue
 
             comment_id = c.name
-            redditor_name = c.author.name
+            redditor_name = c.author.name.lower()
             karma = c.score
 
             redditors[redditor_name] = redditors.get(redditor_name, 0) + 1
@@ -169,13 +169,16 @@ def process_subreddit(subreddit_name,
     old_redditors = Counter(old_redditors) + Counter(refs)
 
     timestamp = timegm(datetime.utcnow().utctimetuple())
-    old_redditors = [(u, old_redditors[u], None) for u in old_redditors.keys()]
-    new_redditors = [(u, new_redditors[u]) for u in new_redditors.keys()]
+    old_redditors = [(old_redditors[u], u) for u in old_redditors.keys()]
+    new_redditors = [(u, new_redditors[u], None) for u in new_redditors.keys()]
+
+    debug("old:", old_redditors)
+    debug("new:", new_redditors)
 
     cur = conn.cursor()
 
-    cur.executemany(insert_redditor_sql, old_redditors)
-    cur.executemany(update_redditor_refs_sql, new_redditors)
+    cur.executemany(insert_redditor_sql, new_redditors)
+    cur.executemany(update_redditor_refs_sql, old_redditors)
     cur.executemany(insert_submission_sql, submissions)
     cur.executemany(insert_comment_sql, comments)
 
@@ -211,7 +214,7 @@ def process_redditor(redditor_name,
 
     for s in submission_gen:
         submission_id = s.name
-        subreddit_name = s.subreddit.display_name
+        subreddit_name = s.subreddit.display_name.lower()
         title = s.title
         karma = s.score
         if s.is_self:
@@ -219,7 +222,7 @@ def process_redditor(redditor_name,
         else:
             link = s.url
 
-        subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 1
+        subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 10
 
         submissions.append((submission_id, redditor_name, subreddit_name,
                             title, karma, link))
