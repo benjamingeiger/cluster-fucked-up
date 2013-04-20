@@ -49,7 +49,10 @@ def get_all_comments_from_submission(submission,
                                      print_updates=False):
     """Retrieve all comments from the given submission."""
 
-    submission.replace_more_comments(limit=limit, threshold=1)
+    try:
+        submission.replace_more_comments(limit=limit, threshold=1)
+    except ValueError as e:
+        print("ValueError:", e)
 
     return submission.comments
 
