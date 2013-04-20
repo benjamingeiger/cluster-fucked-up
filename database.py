@@ -78,6 +78,27 @@ ORDER BY refs DESC
 LIMIT 1
 """
 
+mark_seeded_sql = \
+"""
+INSERT OR REPLACE INTO meta
+(attribute, value)
+VALUES ('seeded', 'true');
+"""
+
+check_seeded_sql = \
+"""
+SELECT value
+FROM meta
+WHERE attribute = 'seeded';
+"""
+
+count_subreddits_processed_sql = \
+"""
+SELECT COUNT(*)
+FROM subreddits
+WHERE last_processed > 0;
+"""
+
 ######################################################################
 
 
@@ -292,5 +313,29 @@ def find_next_redditor(database_name):
 
     if data is not None:
         (data,) = data
+
+    return data
+
+
+def mark_seeded(database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(mark_seeded_sql)
+    conn.commit()
+
+
+def is_seeded(database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(check_seeded_sql)
+
+    return (cur.fetchone() is not None)
+
+
+def count_subreddits_processed(database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(count_subreddits_processed_sql)
+    (data,) = cur.fetchone()
 
     return data

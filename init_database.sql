@@ -1,3 +1,8 @@
+CREATE TABLE meta (
+	attribute	TEXT	PRIMARY KEY,
+	value		TEXT
+);
+
 CREATE TABLE subreddits (
 	name		TEXT	PRIMARY KEY,
 	refs		INTEGER	DEFAULT 0,
