@@ -99,6 +99,14 @@ FROM subreddits
 WHERE last_processed > 0;
 """
 
+is_subreddit_processed_sql = \
+"""
+SELECT *
+FROM subreddits
+WHERE name = ?
+AND last_processed > 0;
+"""
+
 ######################################################################
 
 
@@ -106,7 +114,6 @@ def get_refs_for_redditors(redditor_names, conn):
     if len(redditor_names) <= 900:
         return get_refs_for_redditors_helper(redditor_names, conn)
 
-    chunk = redditor_names[:900]
     results1 = get_refs_for_redditors_helper(redditor_names[:900], conn)
     results2 = get_refs_for_redditors(redditor_names[900:], conn)
 
@@ -132,7 +139,6 @@ def get_refs_for_subreddits(subreddit_names, conn):
     if len(subreddit_names) <= 900:
         return get_refs_for_subreddits_helper(subreddit_names, conn)
 
-    chunk = subreddit_names[:900]
     results1 = get_refs_for_subreddits_helper(subreddit_names[:900], conn)
     results2 = get_refs_for_subreddits(subreddit_names[900:], conn)
 
@@ -350,7 +356,7 @@ def find_next_redditor(database_name):
 def mark_seeded(database_name):
     conn = sqlite3.connect(database_name)
 
-    cur = conn.execute(mark_seeded_sql)
+    conn.execute(mark_seeded_sql)
     conn.commit()
 
 
@@ -369,3 +375,11 @@ def count_subreddits_processed(database_name):
     (data,) = cur.fetchone()
 
     return data
+
+
+def is_subreddit_processed(subreddit_name, database_name):
+    conn = sqlite3.connect(database_name)
+
+    cur = conn.execute(is_subreddit_processed_sql, (subreddit_name,))
+
+    return (cur.fetchone() is not None)

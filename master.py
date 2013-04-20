@@ -19,12 +19,15 @@ MAX_SUBREDDITS = 5000
 
 def process_seed_subreddits(reddit_obj):
     for subreddit in SEED_SUBREDDITS:
-        print("Processing seed subreddit: {}".format(subreddit))
-        database.process_subreddit(
-                subreddit,
-                DATABASE_NAME,
-                limit=LIMIT,
-                reddit_obj=reddit_obj)
+        if database.is_subreddit_processed(subreddit, DATABASE_NAME):
+            print("Skipping seed subreddit: {}".format(subreddit))
+        else:
+            print("Processing seed subreddit: {}".format(subreddit))
+            database.process_subreddit(
+                    subreddit,
+                    DATABASE_NAME,
+                    limit=LIMIT,
+                    reddit_obj=reddit_obj)
 
 
 def process_next_redditor(reddit_obj, count):
@@ -55,6 +58,7 @@ def process_next_subreddit(reddit_obj, count):
             reddit_obj=reddit_obj)
 
     return 1
+
 
 def main():
     reddit_obj = praw.Reddit(USER_AGENT)
