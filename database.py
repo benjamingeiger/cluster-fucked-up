@@ -185,7 +185,10 @@ def process_subreddit(subreddit_name,
         if (limit < 100) or (count % (limit / 10) == 0):
             print("    -> processing submission number", count)
         submission_id = s.name
-        redditor_name = s.author.name.lower()
+        try:
+            redditor_name = s.author.name.lower()
+        except AttributeError:
+            redditor_name = ""
         title = s.title
         karma = s.score
         if s.is_self:
