@@ -265,6 +265,11 @@ def process_subreddit(subreddit_name,
     conn.commit()
 
 
+# holy shit this is ugly, but we can't initialize a subreddit object
+# for every single comment that comes through. so we cache.
+subreddit_display_names = {}
+
+
 def process_redditor(redditor_name,
                      database_name,
                      limit=1000,
@@ -313,7 +318,17 @@ def process_redditor(redditor_name,
         comment_id = c.name
         karma = c.score
 
-        subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 1
+        if c.subreddit_id in subreddit_display_names:
+            subreddit_name = subreddit_display_names[c.subreddit_id]
+        else:
+            try:
+                subreddit_name = c.subreddit.display_name.lower()
+                subreddit_display_names[c.subreddit_id] = subreddit_name
+            except ValueError:
+                subreddit_name = None
+
+        if subreddit_name:
+            subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 1
 
         comments.append((comment_id, redditor_name, submission_id, karma))
 
