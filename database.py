@@ -316,6 +316,7 @@ def process_redditor(redditor_name,
             continue
 
         comment_id = c.name
+        submission_id = c.parent_id
         karma = c.score
 
         if c.subreddit_id in subreddit_display_names:
