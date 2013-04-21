@@ -51,6 +51,7 @@ def get_all_comments_from_submission(submission,
 
     try:
         submission.replace_more_comments(limit=limit, threshold=1)
+        return submission.comments
     except ValueError as e:
         print("ValueError:", e)
 
