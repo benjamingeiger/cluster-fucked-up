@@ -352,7 +352,7 @@ def process_redditor(redditor_name,
     old_subreddits = Counter(old_subreddits) + Counter(refs)
 
     timestamp = timegm(datetime.utcnow().utctimetuple())
-    old_subreddits = [(u, old_subreddits[u])
+    old_subreddits = [(old_subreddits[u], u)
             for u in old_subreddits.keys()]
     new_subreddits = [(u, None, new_subreddits[u], None)
             for u in new_subreddits.keys()]
