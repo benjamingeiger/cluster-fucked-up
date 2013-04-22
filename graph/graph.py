@@ -28,6 +28,29 @@ get_common_comment_redditors_sql = \
         WHERE s.subreddit_name = ?;
         """
 
+get_subreddit_link_karma_sql = \
+        """
+        SELECT redditor_name, SUM(submissions.karma)
+        FROM submissions
+        WHERE subreddit_name = ?
+        AND redditor_name IN (SELECT * FROM common_redditors)
+        GROUP BY redditor_name;
+        """
+
+get_subreddit_comment_karma_sql = \
+        """
+        SELECT c.redditor_name, SUM(c.karma)
+        FROM (SELECT *
+              FROM comments
+              WHERE redditor_name IN (SELECT * FROM common_redditors)) AS c
+             INNER JOIN
+             (SELECT *
+              FROM submissions
+              WHERE subreddit_name = ?) AS s
+             ON s.submission_id = c.submission_id
+        GROUP BY c.redditor_name;
+        """
+
 get_redditor_subreddit_link_karma_sql = \
         """
         SELECT SUM(submissions.karma)
@@ -101,6 +124,63 @@ def find_comment_redditors_in_common(
         results.append(item[0])
 
     return results
+
+
+def subreddit_link_karma(
+        redditor_names,
+        subreddit_name,
+        reddit_db):
+
+    # prep temp table
+    reddit_db.execute(
+            """
+            CREATE TEMPORARY TABLE common_redditors (
+                name TEXT PRIMARY KEY
+            );
+            """)
+    reddit_db.executemany(
+            """
+            INSERT INTO common_redditors (name)
+            VALUES (?);
+            """, [(name,) for name in redditor_names])
+
+    cur = reddit_db.execute(get_subreddit_link_karma_sql, (subreddit_name,))
+    data = cur.fetchall()
+
+    reddit_db.execute("DROP TABLE common_redditors;")
+
+    if data is None:
+        return None
+    else:
+        return {d[0]:d[1] for d in data}
+
+def subreddit_comment_karma(
+        redditor_names,
+        subreddit_name,
+        reddit_db):
+
+    # prep temp table
+    reddit_db.execute(
+            """
+            CREATE TEMPORARY TABLE common_redditors (
+                name TEXT PRIMARY KEY
+            );
+            """)
+    reddit_db.executemany(
+            """
+            INSERT INTO common_redditors (name)
+            VALUES (?);
+            """, [(name,) for name in redditor_names])
+
+    cur = reddit_db.execute(get_subreddit_comment_karma_sql, (subreddit_name,))
+    data = cur.fetchall()
+
+    reddit_db.execute("DROP TABLE common_redditors;")
+
+    if data is None:
+        return None
+    else:
+        return {d[0]:d[1] for d in data}
 
 
 def redditor_subreddit_link_karma(
