@@ -1,13 +1,5 @@
 from __future__ import print_function
 
-LINK_KARMA_WEIGHT = 10
-COMMENT_KARMA_WEIGHT = 1
-CROSSPOST_KARMA_WEIGHT = 5
-
-
-REDDIT_DB = "../reddit.db"
-GRAPH_DB = "../graph.db"
-
 
 ######################################################################
 # SQL
