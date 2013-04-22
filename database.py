@@ -34,8 +34,8 @@ WHERE name = ?;
 insert_subreddit_sql = \
 """
 INSERT OR REPLACE INTO subreddits
-(name, refs, last_processed)
-VALUES (?, ?, ?);
+(name, is_nsfw, refs, last_processed)
+VALUES (?, ?, ?, ?);
 """
 
 update_subreddit_refs_sql = \
@@ -49,8 +49,8 @@ insert_submission_sql = \
 """
 INSERT OR REPLACE INTO submissions
 (submission_id, redditor_name, subreddit_name,
- title, karma, link)
-VALUES (?, ?, ?, ?, ?, ?);
+ title, karma, link, is_nsfw)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 """
 
 insert_comment_sql = \
@@ -209,12 +209,13 @@ def process_subreddit(subreddit_name,
             link = "self"
         else:
             link = s.url
+        is_nsfw = 1 if s.over_18 else 0
 
         if redditor_name != "":
             redditors[redditor_name] = redditors.get(redditor_name, 0) + 10
 
             submissions.append((submission_id, redditor_name, subreddit_name,
-                                title, karma, link))
+                                title, karma, link, is_nsfw))
 
         for c in reddit.get_all_comments_from_submission(s, limit=5):
             if c.author is None:
@@ -260,7 +261,11 @@ def process_subreddit(subreddit_name,
     cur.executemany(insert_submission_sql, submissions)
     cur.executemany(insert_comment_sql, comments)
 
-    cur.executemany(insert_subreddit_sql, [(subreddit_name, -1, timestamp)])
+    subreddit_is_nsfw = reddit_obj.get_subreddit(subreddit_name).over18
+    subreddit_is_nsfw = 1 if subreddit_is_nsfw else 0
+
+    cur.executemany(insert_subreddit_sql,
+                    [(subreddit_name, subreddit_is_nsfw, -1, timestamp)])
 
     conn.commit()
 
@@ -304,11 +309,12 @@ def process_redditor(redditor_name,
             link = "self"
         else:
             link = s.url
+        is_nsfw = 1 if s.over_18 else 0
 
         subreddits[subreddit_name] = subreddits.get(subreddit_name, 0) + 10
 
         submissions.append((submission_id, redditor_name, subreddit_name,
-                            title, karma, link))
+                            title, karma, link, is_nsfw))
 
     for c in comment_gen:
         if c.author is None:
@@ -348,7 +354,7 @@ def process_redditor(redditor_name,
     timestamp = timegm(datetime.utcnow().utctimetuple())
     old_subreddits = [(u, old_subreddits[u])
             for u in old_subreddits.keys()]
-    new_subreddits = [(u, new_subreddits[u], None)
+    new_subreddits = [(u, None, new_subreddits[u], None)
             for u in new_subreddits.keys()]
 
     debug("Old:", old_subreddits)
