@@ -8,10 +8,10 @@ from definitions import USER_AGENT
 from requests.exceptions import HTTPError
 
 
-DATABASE_NAME = "reddit.db"
+DATABASE_NAME = "../reddit.db"
 
 SEED_SUBREDDITS = ["nsfw", "pics", "news", "worldnews", "funny",
-                   "photography", "askreddit"]
+                   "photography", "askreddit", "usf", "tampa", "turtles"]
 
 LIMIT = 3
 
