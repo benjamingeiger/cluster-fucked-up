@@ -12,6 +12,30 @@ GRAPH_DB = "../graph.db"
 ######################################################################
 # SQL
 
+get_common_link_redditors_sql = \
+        """
+        SELECT DISTINCT redditor_name
+        FROM submissions
+        WHERE subreddit_name = ?
+        INTERSECT
+        SELECT DISTINCT redditor_name
+        FROM submissions
+        WHERE subreddit_name = ?;
+        """
+
+get_common_comment_redditors_sql = \
+        """
+        SELECT DISTINCT c.redditor_name
+        FROM submissions s INNER JOIN comments c
+             ON s.submission_id = c.submission_id
+        WHERE s.subreddit_name = ?
+        INTERSECT
+        SELECT DISTINCT c.redditor_name
+        FROM submissions s INNER JOIN comments c
+             ON s.submission_id = c.submission_id
+        WHERE s.subreddit_name = ?;
+        """
+
 get_redditor_subreddit_link_karma_sql = \
         """
         SELECT SUM(submissions.karma)
@@ -51,6 +75,40 @@ get_subreddit_crosspost_link_karma_sql = \
         """
 
 ######################################################################
+
+
+def find_link_redditors_in_common(
+        other_subreddit_name,
+        this_subreddit_name,
+        reddit_db):
+
+    cur = reddit_db.execute(get_common_link_redditors_sql,
+            (other_subreddit_name.lower(), this_subreddit_name.lower()))
+
+    data = cur.fetchall()
+
+    results = []
+    for item in data:
+        results.append(item[0])
+
+    return results
+
+
+def find_comment_redditors_in_common(
+        other_subreddit_name,
+        this_subreddit_name,
+        reddit_db):
+
+    cur = reddit_db.execute(get_common_comment_redditors_sql,
+            (other_subreddit_name.lower(), this_subreddit_name.lower()))
+
+    data = cur.fetchall()
+
+    results = []
+    for item in data:
+        results.append(item[0])
+
+    return results
 
 
 def redditor_subreddit_link_karma(
