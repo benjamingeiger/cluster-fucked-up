@@ -2,6 +2,10 @@ from __future__ import print_function
 
 import sqlite3
 
+from os.path import exists, isfile
+from time import sleep
+import sys
+
 import graph
 
 
@@ -19,7 +23,8 @@ get_processed_subreddits_sql = \
         """
         SELECT DISTINCT name
         FROM subreddits
-        WHERE last_processed > 0;
+        WHERE last_processed > 0
+        ORDER BY last_processed ASC;
         """
 
 insert_subreddit_pair_sql = \
@@ -61,6 +66,29 @@ def get_processed_subreddits(reddit_conn):
     return results
 
 
+def cross_subreddit(reddit_db_name, evidence_subreddit_name, output_file_name):
+    reddit_conn = sqlite3.connect(reddit_db_name)
+
+    output_file = None
+    if not exists(output_file_name) and not isfile(output_file_name):
+        try:
+            output_file = open(output_file_name, "w")
+        except IOError:
+            print("Could not open {}".format(output_file_name), file=sys.stderr)
+            return
+    else:
+        return
+
+    subreddits = get_processed_subreddits(reddit_conn)
+
+    for assertion in subreddits:
+        if evidence_subreddit_name != assertion:
+            score = compute_subreddit_score(evidence_subreddit_name, assertion, reddit_conn)
+            print("{},{},{}".format(evidence_subreddit_name, assertion, score), file=output_file)
+            print("{},{},{}".format(evidence_subreddit_name, assertion, score))
+
+
+
 def populate_database(reddit_db_name, graph_db_name):
     reddit_conn = sqlite3.connect(reddit_db_name)
     graph_conn = sqlite3.connect(graph_db_name)
@@ -77,3 +105,17 @@ def populate_database(reddit_db_name, graph_db_name):
                                    (evidence, assertion, score))
                 graph_conn.commit()
 
+def main():
+    reddit_db_name = "../reddit.db"
+    reddit_conn = sqlite3.connect(reddit_db_name)
+    subreddits = get_processed_subreddits(reddit_conn)
+
+    for subreddit in subreddits:
+        output_file_name = "output/{}.csv".format(subreddit)
+        if not exists(output_file_name) and not isfile(output_file_name):
+            cross_subreddit(reddit_db_name, subreddit, output_file_name)
+        sleep(0.5)
+
+
+if __name__ == "__main__":
+    main()
