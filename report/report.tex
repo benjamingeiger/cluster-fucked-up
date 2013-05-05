@@ -1,5 +1,6 @@
 \documentclass[journal, draftclsnofoot]{./styles/IEEEtran}
 \usepackage{cite}
+\usepackage{amsmath}
 
 \ifCLASSINFOpdf
   \usepackage[pdftex]{graphicx}
@@ -153,7 +154,7 @@ interesting due to a lack of submissions.
 
 \section{Methodology}
 
-\subsection{Algorithm Specification}
+\subsection{Algorithm Development}
 
 When developing our system, we started with three assumptions:
 
@@ -196,7 +197,48 @@ they are `thrown away' after that post). We decided that this was
 negligible, as we assumed that most redditors are unlikely to use
 different accounts for closely related subreddits.
 
-\textit{todo: present scores as sums, as worked out}
+\subsection{Algorithm Specification}
+
+We decided to represent reddit as a weighted digraph $G = (V, E)$, with
+each vertex $v \in V$ representing a subreddit and each edge $(v_1, v_2,
+w_{v_1v_2}) \in E$ representing the likelihood $w_{v_1v_2}$ that a user
+interested in the topic of $v_1$ will also be interested in the topic of
+$v_2$. This graph is complete, as shown in figure \ref{fig:graph}; edges
+between independent subreddits have a weight of 0.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{graph.png}
+\caption{Example of subreddit digraph.}
+\label{fig:graph}
+\end{figure}
+
+The weight of an edge, $w_{v_1v_2}$, is the sum of several subscores:
+
+\begin{align*}
+w_{v_1v_2} &= \sum_{r \in (R(v_1) \cap R(v_2))} \left[ w_L L(r, v_2) + w_C C(r,
+v_2) \right]\\
+&+ w_X \sum_{s \in (S(v_1) \cap S(v_2)), K(s, v_1) > 0} K(s, v_2)
+\end{align*}
+
+where $L(r, v)$ is the sum of the scores for submissions by redditor $r$
+in subreddit $v$, $C(r, v)$ is the same \textit{mutatis mutandis} for
+comments instead of submissions, and $K(s, v)$ is the score of
+submission $s$ in subreddit $v$. (Properly, a single submission is
+defined as being part of its subreddit, and therefore can only exist in
+one subreddit, but for the purpose of this algorithm, two submissions
+are considered the same if they link to the same URL.)
+
+As we are assumed to know our user's subscribed subreddits (or at the
+very least, will be provided a set of subreddits with which to provide
+recommendations), we can call that set of subreddits $S$ and construct a
+secondary graph, $G' = (V \cup \{s'\}, E \cup E')$, in which $s$ is a
+dummy starting node and $E' = (s, v, w_{sv})$ is a set of edges from $s$
+to each node $v \in V\backslash S$, and $w_{sv} = \sum_{s' \in S}
+w_{s'v}$.
+
+The recommended subreddits are simply the subreddits $v \in V\backslash
+S$ for which $w_{sv}$ is the greatest.
 
 \section{Results}
 
@@ -217,7 +259,6 @@ different accounts for closely related subreddits.
 \nocite{*}
 \bibliographystyle{IEEEtran}
 \bibliography{report}
-
 
 % that's all folks
 \end{document}
